@@ -15,7 +15,7 @@
 ## インストール
 
 ```bash
-go get github.com/youruser/repodocs
+go install github.com/youruser/repodocs
 ```
 
 ## 使い方
