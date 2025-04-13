@@ -106,7 +106,7 @@ func (dm *DocManager) scanDocuments() error {
 
 		content, err := dm.getDocumentContent(filename)
 		if err != nil {
-			fmt.Printf("警告: %sの読み込みに失敗: %v\n", filename, err)
+			fmt.Fprintf(os.Stderr, "警告: %sの読み込みに失敗: %v\n", filename, err)
 			continue
 		}
 
@@ -204,14 +204,14 @@ func main() {
 	// 絶対パスに変換
 	absPath, err := filepath.Abs(*dirPath)
 	if err != nil {
-		fmt.Printf("パスの変換に失敗: %v\n", err)
+		fmt.Fprintf(os.Stderr, "パスの変換に失敗: %v\n", err)
 		os.Exit(1)
 	}
 
 	// ドキュメントマネージャーを作成
 	docManager, err := NewDocManager(absPath)
 	if err != nil {
-		fmt.Printf("ドキュメントマネージャーの初期化に失敗: %v\n", err)
+		fmt.Fprintf(os.Stderr, "ドキュメントマネージャーの初期化に失敗: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -259,8 +259,8 @@ func main() {
 	})
 
 	// サーバーを起動
-	fmt.Printf("ドキュメントサーバーを起動しました。ディレクトリ: %s\n", absPath)
+	fmt.Fprintf(os.Stderr, "ドキュメントサーバーを起動しました。ディレクトリ: %s\n", absPath)
 	if err := server.ServeStdio(s); err != nil {
-		fmt.Printf("サーバーエラー: %v\n", err)
+		fmt.Fprintf(os.Stderr, "サーバーエラー: %v\n", err)
 	}
 }
