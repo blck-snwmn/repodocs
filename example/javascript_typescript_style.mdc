@@ -1,0 +1,29 @@
+---
+description: JavaScript/TypeScriptファイル向けの基本的な命名規則とコーディング規約
+globs: "**/*.{js,ts,jsx,tsx}"
+alwaysApply: false
+---
+
+# JavaScript/TypeScript コーディングスタイルガイド
+
+## 命名規則
+
+- **変数名**: キャメルケース（例: `userName`, `apiResponse`）
+- **定数**: 大文字のスネークケース（例: `MAX_RETRY_COUNT`, `API_KEY`）
+- **クラス名**: パスカルケース（例: `UserRepository`, `DataService`）
+- **インターフェース名**: 「I」プレフィックスなし、パスカルケース（例: `Repository`, `Logger`）
+- **型名**: パスカルケース（例: `UserType`, `ConfigOptions`）
+
+## フォーマット
+
+- インデントはスペース2つ
+- 文末のセミコロンは必須
+- 1行の最大文字数は100文字
+- シングルクォート（'）を優先して使用
+
+## ベストプラクティス
+
+- `any` 型の使用は可能な限り避ける
+- 関数は単一の責任を持つべき
+- 副作用を最小限に抑える
+- コメントは「なぜ」を説明するために使用する 
