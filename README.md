@@ -55,6 +55,38 @@ globs: 関連するファイルパターン
 
 - [mark3labs/mcp-go](https://github.com/mark3labs/mcp-go) - Go言語用MCPプロトコル実装
 
+## MCPクライアントとの連携
+
+MCPをサポートするクライアントのカスタムツールとして利用する場合、以下のような設定を構成ファイルに追加してください。
+
+```json
+{
+    "mcpServers": {
+        "project-docs": {
+            "command": "/Users/username/go/bin/repodocs",
+            "args": [
+                "-dir",
+                "/Users/username/projects/myproject/docs"
+            ],
+            "description": "プロジェクトの技術ドキュメントを検索・参照するツール。設計仕様書、API仕様、運用手順などが含まれています。"
+        },
+        "company-knowledge": {
+            "command": "/Users/username/go/bin/repodocs",
+            "args": [
+                "-dir",
+                "/Users/username/company/knowledge-base"
+            ],
+            "description": "社内ナレッジベースの文書を検索・取得します。ベストプラクティスやトラブルシューティングガイドが含まれています。"
+        }
+    }
+}
+```
+
+設定項目：
+- `command`: repdocsバイナリへの絶対パスを指定
+- `args`: コマンドライン引数。`-dir`でドキュメントディレクトリを指定
+- `description`: MCPサーバーの説明。MCPクライアントがツールの目的を理解し適切に呼び出すために使用されます。例：「プロジェクトドキュメントを検索・参照」
+
 ## ライセンス
 
 MIT 
