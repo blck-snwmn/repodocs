@@ -1,9 +1,8 @@
-package main
+package repodocs
 
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -17,21 +16,21 @@ import (
 )
 
 // ドキュメントのメタデータ
-type DocMetadata struct {
-	Description string
-	Globs       string
-	Filename    string
+type docMetadata struct {
+	description string
+	globs       string
+	filename    string
 }
 
 // ドキュメントマネージャー
-type DocManager struct {
+type docManager struct {
 	root      *os.Root
-	documents map[string]DocMetadata
+	documents map[string]docMetadata
 }
 
 // メタデータをパースする
-func parseMetadata(content string) (DocMetadata, string) {
-	meta := DocMetadata{}
+func parseMetadata(content string) (docMetadata, string) {
+	meta := docMetadata{}
 
 	if !strings.HasPrefix(content, "---\n") {
 		return meta, content
@@ -61,9 +60,9 @@ func parseMetadata(content string) (DocMetadata, string) {
 
 		switch key {
 		case "description":
-			meta.Description = value
+			meta.description = value
 		case "globs":
-			meta.Globs = value
+			meta.globs = value
 		}
 	}
 
@@ -71,15 +70,15 @@ func parseMetadata(content string) (DocMetadata, string) {
 }
 
 // 新しいドキュメントマネージャーを作成
-func NewDocManager(dirPath string) (*DocManager, error) {
+func newDocManager(dirPath string) (*docManager, error) {
 	root, err := os.OpenRoot(dirPath)
 	if err != nil {
 		return nil, fmt.Errorf("ディレクトリを開けませんでした: %w", err)
 	}
 
-	dm := &DocManager{
+	dm := &docManager{
 		root:      root,
-		documents: make(map[string]DocMetadata),
+		documents: make(map[string]docMetadata),
 	}
 
 	// ドキュメントをスキャンして読み込む
@@ -92,7 +91,7 @@ func NewDocManager(dirPath string) (*DocManager, error) {
 }
 
 // ディレクトリをスキャンしてドキュメントを読み込む
-func (dm *DocManager) scanDocuments() error {
+func (dm *docManager) scanDocuments() error {
 	// os.Root の制約内で安全にファイル一覧を取得する
 	files, err := dm.getFilesInDirectory()
 	if err != nil {
@@ -111,7 +110,7 @@ func (dm *DocManager) scanDocuments() error {
 		}
 
 		meta, _ := parseMetadata(content)
-		meta.Filename = filename
+		meta.filename = filename
 		dm.documents[filename] = meta
 	}
 
@@ -119,7 +118,7 @@ func (dm *DocManager) scanDocuments() error {
 }
 
 // ディレクトリ内のファイル一覧を取得
-func (dm *DocManager) getFilesInDirectory() ([]string, error) {
+func (dm *docManager) getFilesInDirectory() ([]string, error) {
 	files := []string{}
 
 	// root.FSを使用してfsパッケージ互換のファイルシステムを取得
@@ -152,13 +151,13 @@ func (dm *DocManager) getFilesInDirectory() ([]string, error) {
 }
 
 // ドキュメントの一覧を取得
-func (dm *DocManager) listDocuments() []map[string]string {
+func (dm *docManager) listDocuments() []map[string]string {
 	result := make([]map[string]string, 0, len(dm.documents))
 
 	for filename, meta := range dm.documents {
 		result = append(result, map[string]string{
 			"filename":    filename,
-			"description": meta.Description,
+			"description": meta.description,
 		})
 	}
 
@@ -166,7 +165,7 @@ func (dm *DocManager) listDocuments() []map[string]string {
 }
 
 // ドキュメントの内容を取得
-func (dm *DocManager) getDocumentContent(filename string) (string, error) {
+func (dm *docManager) getDocumentContent(filename string) (string, error) {
 	file, err := dm.root.Open(filename)
 	if err != nil {
 		return "", fmt.Errorf("ファイルを開けません: %w", err)
@@ -182,7 +181,7 @@ func (dm *DocManager) getDocumentContent(filename string) (string, error) {
 }
 
 // ドキュメントを取得
-func (dm *DocManager) getDocument(filename string) (string, error) {
+func (dm *docManager) getDocument(filename string) (string, error) {
 	if _, exists := dm.documents[filename]; !exists {
 		return "", fmt.Errorf("ドキュメントが見つかりません: %s", filename)
 	}
@@ -196,23 +195,18 @@ func (dm *DocManager) getDocument(filename string) (string, error) {
 	return body, nil
 }
 
-func main() {
-	// コマンドライン引数からディレクトリを取得
-	dirPath := flag.String("dir", ".", "ドキュメントディレクトリのパス")
-	flag.Parse()
-
+// CreateMCPServer creates and configures an MCP server for document management
+func CreateMCPServer(dirPath string) (*server.MCPServer, error) {
 	// 絶対パスに変換
-	absPath, err := filepath.Abs(*dirPath)
+	absPath, err := filepath.Abs(dirPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "パスの変換に失敗: %v\n", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("パスの変換に失敗: %w", err)
 	}
 
 	// ドキュメントマネージャーを作成
-	docManager, err := NewDocManager(absPath)
+	docManager, err := newDocManager(absPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ドキュメントマネージャーの初期化に失敗: %v\n", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("ドキュメントマネージャーの初期化に失敗: %w", err)
 	}
 
 	// MCPサーバーを作成
@@ -258,9 +252,5 @@ func main() {
 		return mcp.NewToolResultText(content), nil
 	})
 
-	// サーバーを起動
-	fmt.Fprintf(os.Stderr, "ドキュメントサーバーを起動しました。ディレクトリ: %s\n", absPath)
-	if err := server.ServeStdio(s); err != nil {
-		fmt.Fprintf(os.Stderr, "サーバーエラー: %v\n", err)
-	}
+	return s, nil
 }
