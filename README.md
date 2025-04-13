@@ -15,7 +15,7 @@
 ## インストール
 
 ```bash
-go install github.com/youruser/repodocs
+go install github.com/blck-snwmn/repodocs/cmd/repodocs
 ```
 
 ## 使い方
